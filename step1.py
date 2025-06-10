@@ -90,6 +90,7 @@ from collections import defaultdict
 from contextlib import contextmanager
 from dotenv import load_dotenv
 from step27 import extract_merge_summarize
+from constants import MATCH_STATUS_DESCRIPTIONS, MATCH_STATUS_SHORT, IN_PLAY_STATUS_IDS
 
 # Load environment variables
 load_dotenv()
@@ -227,16 +228,10 @@ def fetch_live_data():
     logger.info("  Raw API status breakdown:")
     
     # Log status breakdown with descriptions
-    status_desc_map = {
-        0: "Abnormal", 1: "Not started", 2: "First half", 3: "Half-time",
-        4: "Second half", 5: "Overtime", 6: "Overtime (deprecated)",
-        7: "Penalty Shoot-out", 8: "End", 9: "Delay", 10: "Interrupt",
-        11: "Cut in half", 12: "Cancel", 13: "To be determined"
-    }
     
     for status_id in sorted(status_counts.keys()):
         count = status_counts[status_id]
-        desc = status_desc_map.get(status_id, f"Unknown Status")
+        desc = MATCH_STATUS_SHORT.get(status_id, f"Unknown Status")
         logger.info(f"    {desc} (ID: {status_id}): {count} matches")
     
     return live
@@ -338,7 +333,7 @@ def step1_main():
     matches = live_data.get("results", [])
     for match in matches:
         status_id = extract_status_id(match)
-        if status_id in [2, 3, 4, 5, 6, 7]:  # In-Play status IDs
+        if status_id in IN_PLAY_STATUS_IDS:
             in_play_count += 1
     
     logger.info("="*80)
@@ -375,22 +370,6 @@ def create_unified_status_summary(live_matches_data):
     total_matches = len(matches)
     
     # Official status mapping
-    status_desc_map = {
-        0: "Abnormal (suggest hiding)",
-        1: "Not started", 
-        2: "First half",
-        3: "Half-time",
-        4: "Second half",
-        5: "Overtime",
-        6: "Overtime (deprecated)",
-        7: "Penalty Shoot-out",
-        8: "End",
-        9: "Delay",
-        10: "Interrupt",
-        11: "Cut in half",
-        12: "Cancel",
-        13: "To be determined"
-    }
     
     # Count matches by status_id
     status_counts = {}
@@ -400,7 +379,7 @@ def create_unified_status_summary(live_matches_data):
         status_id = extract_status_id(match)
         if status_id is not None:
             matches_with_status += 1
-            status_desc = status_desc_map.get(status_id, f"Unknown Status")
+            status_desc = MATCH_STATUS_DESCRIPTIONS.get(status_id, f"Unknown Status")
             if status_id not in status_counts:
                 status_counts[status_id] = {
                     "description": status_desc,
@@ -427,9 +406,8 @@ def create_unified_status_summary(live_matches_data):
             "formatted": formatted_line
         }
     
-    # Calculate IN-PLAY matches (active statuses: 2,3,4,5,7)
-    in_play_status_ids = [2, 3, 4, 5, 7]
-    in_play_count = sum(status_counts.get(sid, {}).get("count", 0) for sid in in_play_status_ids)
+    # Calculate IN-PLAY matches (active statuses: 2,3,4,5,6,7)
+    in_play_count = sum(status_counts.get(sid, {}).get("count", 0) for sid in IN_PLAY_STATUS_IDS)
     
     formatted_summary.append(f"IN-PLAY MATCHES: {in_play_count}")
     
@@ -451,22 +429,6 @@ def create_detailed_status_mapping(live_matches_data):
     matches = live_matches_data["results"]
     
     # Official Status ID to description mapping
-    status_desc_map = {
-        0: "Abnormal (suggest hiding)",
-        1: "Not started",
-        2: "First half",
-        3: "Half-time",
-        4: "Second half",
-        5: "Overtime",
-        6: "Overtime (deprecated)",
-        7: "Penalty Shoot-out",
-        8: "End",
-        9: "Delay",
-        10: "Interrupt",
-        11: "Cut in half",
-        12: "Cancel",
-        13: "To be determined"
-    }
     
     # Group matches by status
     status_groups = {}
@@ -475,7 +437,7 @@ def create_detailed_status_mapping(live_matches_data):
         status_id = extract_status_id(match)
         
         if status_id is not None:
-            status_desc = status_desc_map.get(status_id, f"Unknown Status (ID: {status_id})")
+            status_desc = MATCH_STATUS_DESCRIPTIONS.get(status_id, f"Unknown Status (ID: {status_id})")
             
             if status_desc not in status_groups:
                 status_groups[status_desc] = {
@@ -537,12 +499,6 @@ def create_comprehensive_match_breakdown(all_data):
     team_info = all_data.get("team_info", {})
     
     # Status mapping
-    status_desc_map = {
-        0: "Abnormal", 1: "Not started", 2: "First half", 3: "Half-time",
-        4: "Second half", 5: "Overtime", 6: "Overtime (deprecated)",
-        7: "Penalty Shoot-out", 8: "End", 9: "Delay", 10: "Interrupt",
-        11: "Cut in half", 12: "Cancel", 13: "To be determined"
-    }
     
     # Group matches by status with full details
     status_breakdown = {}
@@ -552,7 +508,7 @@ def create_comprehensive_match_breakdown(all_data):
         status_id = extract_status_id(match)
         
         if status_id is not None:
-            status_desc = status_desc_map.get(status_id, f"Unknown Status (ID: {status_id})")
+            status_desc = MATCH_STATUS_SHORT.get(status_id, f"Unknown Status (ID: {status_id})")
             
             if status_desc not in status_breakdown:
                 status_breakdown[status_desc] = {
