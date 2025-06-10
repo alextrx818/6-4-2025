@@ -14,6 +14,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 import pytz
+from constants import MATCH_STATUS_DESCRIPTIONS
 
 # ---------------------------------------------------------------------------
 # Constants and Path Configurations
@@ -304,26 +305,10 @@ def save_match_summaries(summaries: list, output_file: str = "step27.json") -> b
         }
         
         # Format status breakdown
-        status_desc_map = {
-            0: "Abnormal (suggest hiding)",
-            1: "Not started", 
-            2: "First half",
-            3: "Half-time",
-            4: "Second half",
-            5: "Overtime",
-            6: "Overtime (deprecated)",
-            7: "Penalty Shoot-out",
-            8: "End",
-            9: "Delay",
-            10: "Interrupt",
-            11: "Cut in half",
-            12: "Cancel",
-            13: "To be determined"
-        }
         
         for status_id in sorted(metrics.status_breakdown.keys()):
             count = metrics.status_breakdown[status_id]["count"]
-            desc = status_desc_map.get(status_id, f"Unknown Status")
+            desc = MATCH_STATUS_DESCRIPTIONS.get(status_id, f"Unknown Status")
             data["step2_processing_summary"]["raw_api_status_breakdown"].append(
                 f"{desc} (ID: {status_id}): {count} matches"
             )
